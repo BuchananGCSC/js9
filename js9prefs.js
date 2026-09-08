@@ -1,6 +1,6 @@
 var JS9Prefs = {
     "globalOpts": {
-        "helperType":       "nodejs",
+        "helperType":       "none",
         "helperPort":       2718,
         "helperCGI":        "./cgi-bin/js9/js9Helper.cgi",
         "debug":            0,
@@ -16,3 +16,4 @@ var JS9Prefs = {
 	"scale":            "linear"
     }
 }
+ 

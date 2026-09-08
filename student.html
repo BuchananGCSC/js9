@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+<link type="text/css" rel="stylesheet" href="./js9support.css">
+<link type="text/css" rel="stylesheet" href="./js9.css">
+<link rel="apple-touch-icon" href="./images/js9-apple-touch-icon.png">
+<script type="text/javascript" src="./js9prefs.js"></script>
+<script type="text/javascript" src="./js9support.min.js"></script>
+<script type="text/javascript" src="./js9.min.js"></script>
+<script type="text/javascript" src="./js9plugins.js"></script>
+<title>JS9 Student Viewer</title>
+<style>
+  :root{
+    --bg: #f4f6f8;
+    --panel-bg: #ffffff;
+    --border: #d7dde3;
+    --text: #1b2430;
+    --muted: #5a6572;
+    --accent: #2f6fed;
+    --accent-dark: #1f4fb8;
+    --good: #1c8a4b;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1{ font-size: 18px; margin: 0; }
+  header nav a{
+    font-size: 13px;
+    color: var(--accent-dark);
+    text-decoration: none;
+    margin-left: 16px;
+  }
+  header nav a:hover{ text-decoration: underline; }
+  .layout{
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+  }
+  .viewer{
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    flex: 1 1 520px;
+  }
+  .viewer .JS9{ margin: 0 auto; }
+  .status-line{
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .controls{
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel{
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .panel h2{
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .field{ margin-bottom: 12px; }
+  .field:last-child{ margin-bottom: 0; }
+  .field label{
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .field .hint{
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  input[type="file"]{ font-size: 13px; width: 100%; }
+  select{
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    background: #fff;
+  }
+  input[type="range"]{ width: 100%; }
+  .row{ display: flex; gap: 8px; }
+  .row button{ flex: 1; }
+  button{
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover{ background: #f0f2f5; }
+  button.primary{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover{ background: var(--accent-dark); }
+  button:disabled{
+    opacity: .45;
+    cursor: not-allowed;
+  }
+  .loaded-tag{
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--good);
+  }
+  .explainer{
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>JS9 Student Viewer</h1>
+  <nav>
+    <a href="./index.html">&larr; Home</a>
+    <a href="./js9.html">Full Desktop Interface</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <div class="viewer">
+    <div class="JS9"></div>
+    <div class="JS9Colorbar"></div>
+    <div class="status-line" id="statusLine">Load a light frame to get started.</div>
+  </div>
+
+  <div class="controls">
+
+    <div class="panel">
+      <h2>1. Load Your Images</h2>
+      <div class="field">
+        <label for="lightFile">Light frame (your image)</label>
+        <input type="file" id="lightFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
+        <div class="loaded-tag" id="lightTag"></div>
+      </div>
+      <div class="field">
+        <label for="darkFile">Dark frame (sensor noise, no light)</label>
+        <input type="file" id="darkFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
+        <div class="loaded-tag" id="darkTag"></div>
+        <div class="hint">Optional &mdash; only needed for the dark-subtraction step below.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>2. Adjust the Display</h2>
+      <div class="field">
+        <label for="cmapSelect">Colormap</label>
+        <select id="cmapSelect">
+          <option value="grey" selected>grey</option>
+          <option value="heat">heat</option>
+          <option value="cool">cool</option>
+          <option value="turbo">turbo</option>
+          <option value="viridis">viridis</option>
+          <option value="magma">magma</option>
+          <option value="sls">sls</option>
+          <option value="red">red</option>
+          <option value="green">green</option>
+          <option value="blue">blue</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="scaleSelect">Scale</label>
+        <select id="scaleSelect">
+          <option value="linear" selected>linear</option>
+          <option value="log">log</option>
+          <option value="sqrt">sqrt</option>
+          <option value="asinh">asinh</option>
+          <option value="histeq">histogram equalize</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="contrastSlider">Contrast</label>
+        <input type="range" id="contrastSlider" min="0" max="10" step="0.1" value="1">
+      </div>
+      <div class="field">
+        <label for="biasSlider">Brightness (bias)</label>
+        <input type="range" id="biasSlider" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="field">
+        <label>Zoom</label>
+        <div class="row">
+          <button id="zoomOutBtn" type="button">&minus; Out</button>
+          <button id="zoomResetBtn" type="button">1:1</button>
+          <button id="zoomInBtn" type="button">+ In</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>3. Subtract the Dark Frame</h2>
+      <p class="explainer">
+        A dark frame captures the noise your camera sensor produces even with
+        no light coming in. Subtracting it from your light frame removes that
+        fixed noise pattern, leaving a cleaner image of just the object you
+        photographed. Both images must be the same pixel dimensions.
+      </p>
+      <div class="row">
+        <button id="subtractBtn" class="primary" type="button" disabled>Subtract Dark Frame</button>
+        <button id="undoSubtractBtn" type="button" disabled>Undo</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>4. Save Your Result</h2>
+      <button id="saveBtn" class="primary" type="button" style="width:100%" disabled>Save as PNG</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="text/javascript">
+(function(){
+  "use strict";
+
+  // keep track of the JS9 image ids for the two loaded frames
+  var state = {
+    lightId: null,
+    darkId: null
+  };
+
+  var statusLine = document.getElementById("statusLine");
+  var lightTag = document.getElementById("lightTag");
+  var darkTag = document.getElementById("darkTag");
+  var subtractBtn = document.getElementById("subtractBtn");
+  var undoSubtractBtn = document.getElementById("undoSubtractBtn");
+  var saveBtn = document.getElementById("saveBtn");
+
+  function setStatus(msg){
+    statusLine.textContent = msg;
+  }
+
+  function refreshButtons(){
+    subtractBtn.disabled = !(state.lightId && state.darkId);
+    saveBtn.disabled = !state.lightId;
+  }
+
+  // ---- loading images ----
+
+  function handleFileLoad(fileInputId, slot, tagEl){
+    document.getElementById(fileInputId).addEventListener("change", function(evt){
+      var files = evt.target.files;
+      if(!files || !files.length){ return; }
+      var f = files[0];
+      setStatus("Loading " + f.name + " ...");
+      JS9.Load(f, {
+        onload: function(im){
+          if(!im){
+            setStatus("Could not load " + f.name + ". Please check the file.");
+            return;
+          }
+          state[slot] = im.id;
+          tagEl.textContent = "Loaded: " + f.name;
+          // make sure the light frame stays the one on screen
+          if(state.lightId){
+            try{ JS9.DisplayImage(state.lightId); }catch(e){ /* ignore */ }
+          }
+          setStatus(f.name + " loaded.");
+          refreshButtons();
+        }
+      });
+    });
+  }
+
+  handleFileLoad("lightFile", "lightId", lightTag);
+  handleFileLoad("darkFile", "darkId", darkTag);
+
+  // ---- colormap / scale / contrast / bias ----
+
+  document.getElementById("cmapSelect").addEventListener("change", function(evt){
+    if(!state.lightId){ return; }
+    try{ JS9.SetColormap(evt.target.value); }
+    catch(e){ setStatus("Could not change colormap: " + e.message); }
+  });
+
+  document.getElementById("scaleSelect").addEventListener("change", function(evt){
+    if(!state.lightId){ return; }
+    try{ JS9.SetScale(evt.target.value); }
+    catch(e){ setStatus("Could not change scale: " + e.message); }
+  });
+
+  function applyContrastBias(){
+    if(!state.lightId){ return; }
+    var contrast = parseFloat(document.getElementById("contrastSlider").value);
+    var bias = parseFloat(document.getElementById("biasSlider").value);
+    try{ JS9.SetColormap(contrast, bias); }
+    catch(e){ /* ignore transient errors while dragging */ }
+  }
+  document.getElementById("contrastSlider").addEventListener("input", applyContrastBias);
+  document.getElementById("biasSlider").addEventListener("input", applyContrastBias);
+
+  // ---- zoom ----
+
+  document.getElementById("zoomInBtn").addEventListener("click", function(){
+    if(!state.lightId){ return; }
+    try{ JS9.SetZoom(JS9.GetZoom() * 2); }catch(e){ /* ignore */ }
+  });
+  document.getElementById("zoomOutBtn").addEventListener("click", function(){
+    if(!state.lightId){ return; }
+    try{ JS9.SetZoom(JS9.GetZoom() / 2); }catch(e){ /* ignore */ }
+  });
+  document.getElementById("zoomResetBtn").addEventListener("click", function(){
+    if(!state.lightId){ return; }
+    try{ JS9.SetZoom(1); }catch(e){ /* ignore */ }
+  });
+
+  // ---- dark frame subtraction ----
+
+  subtractBtn.addEventListener("click", function(){
+    if(!state.lightId || !state.darkId){ return; }
+    try{
+      JS9.DisplayImage(state.lightId);
+      JS9.ImarithData("sub", state.darkId);
+      undoSubtractBtn.disabled = false;
+      setStatus("Dark frame subtracted.");
+    }catch(e){
+      setStatus("Could not subtract: " + e.message + " (are both images the same size?)");
+    }
+  });
+
+  undoSubtractBtn.addEventListener("click", function(){
+    if(!state.lightId){ return; }
+    try{
+      JS9.DisplayImage(state.lightId);
+      JS9.ImarithData("reset");
+      undoSubtractBtn.disabled = true;
+      setStatus("Subtraction undone.");
+    }catch(e){
+      setStatus("Could not undo: " + e.message);
+    }
+  });
+
+  // ---- save ----
+
+  saveBtn.addEventListener("click", function(){
+    if(!state.lightId){ return; }
+    try{
+      JS9.DisplayImage(state.lightId);
+      JS9.SavePNG();
+    }catch(e){
+      setStatus("Could not save: " + e.message);
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
