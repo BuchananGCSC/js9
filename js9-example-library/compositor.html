@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+<link type="text/css" rel="stylesheet" href="./js9support.css">
+<link type="text/css" rel="stylesheet" href="./js9.css">
+<link rel="apple-touch-icon" href="./images/js9-apple-touch-icon.png">
+<script type="text/javascript" src="./js9prefs.js"></script>
+<script type="text/javascript" src="./js9support.min.js"></script>
+<script type="text/javascript" src="./js9.min.js"></script>
+<script type="text/javascript" src="./js9plugins.js"></script>
+<script type="text/javascript" src="./examples.js"></script>
+<title>JS9 Color Compositor</title>
+<style>
+  :root{
+    --bg: #f4f6f8;
+    --panel-bg: #ffffff;
+    --border: #d7dde3;
+    --text: #1b2430;
+    --muted: #5a6572;
+    --accent: #2f6fed;
+    --accent-dark: #1f4fb8;
+    --good: #1c8a4b;
+    --red: #d64545;
+    --green: #2e9e4f;
+    --blue: #2f6fed;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1{ font-size: 18px; margin: 0; }
+  header nav a{
+    font-size: 13px;
+    color: var(--accent-dark);
+    text-decoration: none;
+    margin-left: 16px;
+  }
+  header nav a:hover{ text-decoration: underline; }
+  .layout{
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+  }
+  .viewer{
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    flex: 1 1 520px;
+  }
+  .viewer .JS9{ margin: 0 auto; }
+  .status-line{
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--muted);
+    min-height: 18px;
+  }
+  .controls{
+    flex: 0 0 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel{
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .panel h2{
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .field{ margin-bottom: 12px; }
+  .field:last-child{ margin-bottom: 0; }
+  .field label{
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .channel-label{ display: flex; align-items: center; gap: 6px; }
+  .swatch{
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  }
+  .swatch.red{ background: var(--red); }
+  .swatch.green{ background: var(--green); }
+  .swatch.blue{ background: var(--blue); }
+  input[type="file"]{ font-size: 13px; width: 100%; }
+  select{
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    background: #fff;
+  }
+  input[type="range"]{ width: 100%; }
+  .row{ display: flex; gap: 8px; }
+  .row button{ flex: 1; }
+  button{
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover{ background: #f0f2f5; }
+  button.primary{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover{ background: var(--accent-dark); }
+  button.small{ padding: 4px 8px; font-size: 12px; font-weight: 500; }
+  button:disabled{
+    opacity: .45;
+    cursor: not-allowed;
+  }
+  .loaded-tag{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--good);
+  }
+  .explainer{
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 12px;
+  }
+  .example-banner{
+    background: #eaf1ff;
+    border: 1px solid #c6d9fb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .example-banner strong{ display: block; margin-bottom: 2px; }
+  .example-banner a{ color: var(--accent-dark); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>JS9 Color Compositor</h1>
+  <nav>
+    <a href="./index.html">&larr; Home</a>
+    <a href="./examples.html">Example Library</a>
+    <a href="./student.html">Student Viewer</a>
+    <a href="./js9.html">Full Desktop Interface</a>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <div class="viewer">
+    <div id="exampleBanner" class="example-banner" style="display:none"></div>
+    <div class="JS9"></div>
+    <div class="JS9Colorbar"></div>
+    <div class="status-line" id="statusLine">Load one to three grayscale images below, one per color channel.</div>
+  </div>
+
+  <div class="controls">
+
+    <div class="panel">
+      <h2>1. Load Your Channels</h2>
+
+      <div class="field">
+        <label class="channel-label" id="redLabel"><span class="swatch red"></span>Red channel</label>
+        <input type="file" id="redFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
+        <div class="loaded-tag" id="redTag" style="display:none"><span id="redTagText"></span><button class="small" id="redClear" type="button">Clear</button></div>
+      </div>
+
+      <div class="field">
+        <label class="channel-label" id="greenLabel"><span class="swatch green"></span>Green channel</label>
+        <input type="file" id="greenFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
+        <div class="loaded-tag" id="greenTag" style="display:none"><span id="greenTagText"></span><button class="small" id="greenClear" type="button">Clear</button></div>
+      </div>
+
+      <div class="field">
+        <label class="channel-label" id="blueLabel"><span class="swatch blue"></span>Blue channel</label>
+        <input type="file" id="blueFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
+        <div class="loaded-tag" id="blueTag" style="display:none"><span id="blueTagText"></span><button class="small" id="blueClear" type="button">Clear</button></div>
+      </div>
+
+      <div class="hint" style="font-size:12px;color:var(--muted);margin-top:4px;">
+        All images must be the same pixel dimensions and already pixel-aligned (no reprojection is done here).
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>2. Adjust the Composite</h2>
+      <div class="field">
+        <label for="scaleSelect">Scale</label>
+        <select id="scaleSelect">
+          <option value="linear" selected>linear</option>
+          <option value="log">log</option>
+          <option value="sqrt">sqrt</option>
+          <option value="asinh">asinh</option>
+          <option value="histeq">histogram equalize</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="contrastSlider">Contrast</label>
+        <input type="range" id="contrastSlider" min="0" max="10" step="0.1" value="1">
+      </div>
+      <div class="field">
+        <label for="biasSlider">Brightness (bias)</label>
+        <input type="range" id="biasSlider" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="field">
+        <label>Zoom</label>
+        <div class="row">
+          <button id="zoomOutBtn" type="button">&minus; Out</button>
+          <button id="zoomResetBtn" type="button">1:1</button>
+          <button id="zoomInBtn" type="button">+ In</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>About Combining Channels</h2>
+      <p class="explainer" id="aboutText">
+        Each channel you load is tinted red, green, or blue and layered together
+        using a "screen" blend, the same technique used to build real
+        astronomical color images: bright areas in any channel show through,
+        and channels overlap to mix new colors.
+      </p>
+    </div>
+
+    <div class="panel">
+      <button id="saveBtn" class="primary" type="button" style="width:100%" disabled>Save Composite as PNG</button>
+    </div>
+
+  </div>
+</div>
+
+<script type="text/javascript">
+(function(){
+  "use strict";
+
+  var COLORS = ["red", "green", "blue"];
+
+  // JS9 image ids currently occupying each channel slot
+  var state = { red: null, green: null, blue: null };
+
+  var statusLine = document.getElementById("statusLine");
+  var saveBtn = document.getElementById("saveBtn");
+  var tagEls = {}, tagTextEls = {}, labelEls = {};
+  COLORS.forEach(function(c){
+    tagEls[c] = document.getElementById(c + "Tag");
+    tagTextEls[c] = document.getElementById(c + "TagText");
+    labelEls[c] = document.getElementById(c + "Label");
+  });
+
+  function setStatus(msg){ statusLine.textContent = msg; }
+
+  function loadedCount(){
+    return COLORS.filter(function(c){ return !!state[c]; }).length;
+  }
+
+  function refreshButtons(){
+    saveBtn.disabled = loadedCount() === 0;
+  }
+
+  function currentAdjustments(){
+    return {
+      scale: document.getElementById("scaleSelect").value,
+      contrast: parseFloat(document.getElementById("contrastSlider").value),
+      bias: parseFloat(document.getElementById("biasSlider").value)
+    };
+  }
+
+  function applyAdjustmentsTo(imId){
+    var adj = currentAdjustments();
+    try{ JS9.SetScale(adj.scale, {display: imId}); }catch(e){ /* ignore */ }
+    try{ JS9.SetColormap(adj.contrast, adj.bias, {display: imId}); }catch(e){ /* ignore */ }
+  }
+
+  function applyAdjustmentsToAll(){
+    COLORS.forEach(function(c){
+      if(state[c]){ applyAdjustmentsTo(state[c]); }
+    });
+  }
+
+  // ---- loading / clearing channels ----
+
+  function loadIntoChannel(color, fileOrURL, label){
+    setStatus("Loading " + label + " into the " + color + " channel...");
+    JS9.Load(fileOrURL, {
+      onload: function(im){
+        if(!im){
+          setStatus("Could not load " + label + ".");
+          return;
+        }
+        // replace whatever was previously in this slot
+        if(state[color] && state[color] !== im.id){
+          try{ JS9.CloseImage({display: state[color]}); }catch(e){ /* ignore */ }
+        }
+        state[color] = im.id;
+        try{
+          JS9.SetColormap(color, {display: im});
+          JS9.BlendImage(true, {display: im});
+          JS9.BlendImage("screen", 1.0, {display: im});
+          JS9.BlendDisplay(true);
+        }catch(e){
+          setStatus("Loaded, but could not blend: " + e.message);
+        }
+        applyAdjustmentsTo(im.id);
+        tagTextEls[color].textContent = "Loaded: " + label;
+        tagEls[color].style.display = "flex";
+        setStatus(label + " loaded as the " + color + " channel.");
+        refreshButtons();
+      }
+    });
+  }
+
+  COLORS.forEach(function(color){
+    document.getElementById(color + "File").addEventListener("change", function(evt){
+      var files = evt.target.files;
+      if(!files || !files.length){ return; }
+      loadIntoChannel(color, files[0], files[0].name);
+    });
+    document.getElementById(color + "Clear").addEventListener("click", function(){
+      if(state[color]){
+        try{ JS9.CloseImage({display: state[color]}); }catch(e){ /* ignore */ }
+        state[color] = null;
+        tagEls[color].style.display = "none";
+        setStatus("Cleared the " + color + " channel.");
+        refreshButtons();
+      }
+    });
+  });
+
+  // ---- adjustments ----
+
+  document.getElementById("scaleSelect").addEventListener("change", applyAdjustmentsToAll);
+  document.getElementById("contrastSlider").addEventListener("input", applyAdjustmentsToAll);
+  document.getElementById("biasSlider").addEventListener("input", applyAdjustmentsToAll);
+
+  document.getElementById("zoomInBtn").addEventListener("click", function(){
+    COLORS.forEach(function(c){
+      if(state[c]){
+        try{ JS9.SetZoom(JS9.GetZoom({display: state[c]}) * 2, {display: state[c]}); }catch(e){ /* ignore */ }
+      }
+    });
+  });
+  document.getElementById("zoomOutBtn").addEventListener("click", function(){
+    COLORS.forEach(function(c){
+      if(state[c]){
+        try{ JS9.SetZoom(JS9.GetZoom({display: state[c]}) / 2, {display: state[c]}); }catch(e){ /* ignore */ }
+      }
+    });
+  });
+  document.getElementById("zoomResetBtn").addEventListener("click", function(){
+    COLORS.forEach(function(c){
+      if(state[c]){
+        try{ JS9.SetZoom(1, {display: state[c]}); }catch(e){ /* ignore */ }
+      }
+    });
+  });
+
+  // ---- save ----
+
+  saveBtn.addEventListener("click", function(){
+    var anyId = state.red || state.green || state.blue;
+    if(!anyId){ return; }
+    try{ JS9.SavePNG({display: anyId}); }
+    catch(e){ setStatus("Could not save: " + e.message); }
+  });
+
+  // ---- load a preset example from examples.js via ?example=key ----
+
+  function loadExample(key){
+    var ex = window.JS9_EXAMPLES && JS9_EXAMPLES[key];
+    if(!ex || !ex.files){
+      setStatus("Unknown example: " + key);
+      return;
+    }
+    var banner = document.getElementById("exampleBanner");
+    banner.style.display = "block";
+    banner.innerHTML = "<strong>" + ex.title + "</strong>" + ex.description +
+      " &mdash; <a href=\"./compositor.html\">load your own images instead</a>";
+
+    if(ex.channelLabels){
+      COLORS.forEach(function(c){
+        if(ex.channelLabels[c]){
+          labelEls[c].lastChild.textContent = " " + ex.channelLabels[c] + " (" + c + ")";
+        }
+      });
+    }
+
+    COLORS.forEach(function(c){
+      if(ex.files[c]){
+        loadIntoChannel(c, ex.files[c], ex.files[c].split("/").pop());
+      }
+    });
+  }
+
+  // JS9 finishes initializing (display created, WASM FITS module loaded,
+  // etc.) asynchronously and signals "JS9:ready" on $(document) when done.
+  // Loading a FITS file before that fires can fail silently, so wait for it.
+  function whenJS9Ready(fn){
+    if(window.JS9 && JS9.readied){ fn(); }
+    else { $(document).on("JS9:ready", fn); }
+  }
+
+  whenJS9Ready(function(){
+    var params = new URLSearchParams(window.location.search);
+    var key = params.get("example");
+    if(key){ loadExample(key); }
+  });
+
+})();
+</script>
+
+</body>
+</html>

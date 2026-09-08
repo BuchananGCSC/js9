@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+<title>JS9 Example Library</title>
+<script type="text/javascript" src="./examples.js"></script>
+<style>
+  :root{
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --border: #d7dde3;
+    --text: #1b2430;
+    --muted: #5a6572;
+    --accent: #2f6fed;
+    --accent-dark: #1f4fb8;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1{ font-size: 18px; margin: 0; }
+  header nav a{
+    font-size: 13px;
+    color: var(--accent-dark);
+    text-decoration: none;
+    margin-left: 16px;
+  }
+  header nav a:hover{ text-decoration: underline; }
+  .wrap{ max-width: 980px; margin: 0 auto; padding: 30px 20px 60px; }
+  p.lede{ color: var(--muted); font-size: 15px; line-height: 1.5; margin-top: 0; }
+  h2.category{
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    margin: 32px 0 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .cards{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+  .card{
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h3{ margin: 0 0 8px; font-size: 16px; }
+  .card p{ color: var(--muted); font-size: 13.5px; line-height: 1.5; flex-grow: 1; margin: 0 0 14px; }
+  .card .files{
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .card a.btn{
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .card a.btn:hover{ background: var(--accent-dark); }
+  footer{ margin-top: 40px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>JS9 Example Library</h1>
+  <nav>
+    <a href="./index.html">&larr; Home</a>
+    <a href="./student.html">Student Viewer</a>
+    <a href="./compositor.html">Color Compositor</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <p class="lede">Ready-made image sets for common assignments. Pick one below and it opens pre-loaded in the right tool &mdash; no need to hunt for files.</p>
+  <div id="categories"></div>
+
+  <footer>
+    All example images here are synthetic (computer-generated to look like real telescope data) so they're safe to distribute, reload endlessly, and always available &mdash; they are not real observations. Ask your teacher if this assignment set has been swapped for real MicroObservatory data.
+  </footer>
+</div>
+
+<script type="text/javascript">
+(function(){
+  "use strict";
+
+  var categoryOrder = [];
+  var byCategory = {};
+
+  Object.keys(JS9_EXAMPLES).forEach(function(key){
+    var ex = JS9_EXAMPLES[key];
+    if(!byCategory[ex.category]){
+      byCategory[ex.category] = { label: ex.categoryLabel, items: [] };
+      categoryOrder.push(ex.category);
+    }
+    byCategory[ex.category].items.push({ key: key, ex: ex });
+  });
+
+  var container = document.getElementById("categories");
+
+  categoryOrder.forEach(function(cat){
+    var group = byCategory[cat];
+
+    var h2 = document.createElement("h2");
+    h2.className = "category";
+    h2.textContent = group.label;
+    container.appendChild(h2);
+
+    var cardsDiv = document.createElement("div");
+    cardsDiv.className = "cards";
+
+    group.items.forEach(function(item){
+      var ex = item.ex;
+      var card = document.createElement("div");
+      card.className = "card";
+
+      var h3 = document.createElement("h3");
+      h3.textContent = ex.title;
+      card.appendChild(h3);
+
+      var p = document.createElement("p");
+      p.textContent = ex.description;
+      card.appendChild(p);
+
+      var files = document.createElement("div");
+      files.className = "files";
+      files.textContent = Object.keys(ex.files).map(function(k){
+        return k + ": " + ex.files[k].split("/").pop();
+      }).join(" · ");
+      card.appendChild(files);
+
+      var a = document.createElement("a");
+      a.className = "btn";
+      a.href = ex.target + "?example=" + encodeURIComponent(item.key);
+      a.textContent = "Load in " + (ex.target === "student.html" ? "Student Viewer" : "Color Compositor") + " →";
+      card.appendChild(a);
+
+      cardsDiv.appendChild(card);
+    });
+
+    container.appendChild(cardsDiv);
+  });
+})();
+</script>
+
+</body>
+</html>

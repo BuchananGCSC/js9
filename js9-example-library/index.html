@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link type="image/x-icon" rel="shortcut icon" href="./favicon.ico">
+<title>JS9 Image Viewer</title>
+<style>
+  :root{
+    --bg: #f4f6f8;
+    --card-bg: #ffffff;
+    --border: #d7dde3;
+    --text: #1b2430;
+    --muted: #5a6572;
+    --accent: #2f6fed;
+    --accent-dark: #1f4fb8;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 20px 60px;
+  }
+  .wrap{ max-width: 900px; margin: 0 auto; }
+  h1{ font-size: 28px; margin-bottom: 4px; }
+  p.lede{ color: var(--muted); margin-top: 0; font-size: 16px; line-height: 1.5; }
+  .cards{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 32px;
+  }
+  @media (max-width: 700px){
+    .cards{ grid-template-columns: 1fr; }
+  }
+  .card{
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h2{ margin-top: 0; font-size: 20px; }
+  .card p{ color: var(--muted); font-size: 14px; line-height: 1.5; flex-grow: 1; }
+  .card ul{ color: var(--muted); font-size: 14px; line-height: 1.6; padding-left: 20px; }
+  .card a.btn{
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+  }
+  .card a.btn:hover{ background: var(--accent-dark); }
+  .badge{
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    background: #e8f0fe;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    width: fit-content;
+  }
+  footer{ margin-top: 40px; color: var(--muted); font-size: 13px; }
+  footer a{ color: var(--accent-dark); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>JS9 Image Viewer</h1>
+    <p class="lede">Two ways to view and process FITS astronomical images in your browser. Pick the interface that fits what you're doing.</p>
+
+    <div class="cards">
+      <div class="card">
+        <span class="badge">Student Edition</span>
+        <h2>Simplified Viewer</h2>
+        <p>A streamlined, classroom-friendly interface inspired by JS9-4L. Load a light image, adjust brightness/contrast and color, and subtract a dark frame to remove sensor noise &mdash; without the full toolbox getting in the way.</p>
+        <ul>
+          <li>Guided, minimal controls</li>
+          <li>Dark-frame subtraction built in</li>
+          <li>Good for first-time users</li>
+        </ul>
+        <a class="btn" href="./student.html">Open Student Viewer &rarr;</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Full Toolkit</span>
+        <h2>Desktop Interface</h2>
+        <p>The complete JS9 astronomical image display: full menus, regions, WCS tools, analysis plugins, image blending, and more. Best for advanced exploration or side-by-side comparison with the simplified view.</p>
+        <ul>
+          <li>Full menubar &amp; toolbar</li>
+          <li>Regions, analysis, scripting</li>
+          <li>Same underlying engine as the student view</li>
+        </ul>
+        <a class="btn" href="./js9.html">Open Full Desktop Interface &rarr;</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Student Edition</span>
+        <h2>Color Compositor</h2>
+        <p>Build true-color RGB composites or false-color images by loading up to three grayscale exposures and mapping each to a red, green, or blue channel &mdash; the same technique used for real multi-filter astrophotography.</p>
+        <ul>
+          <li>One channel per red/green/blue slot</li>
+          <li>Works for true-color and false-color assignments</li>
+          <li>Export the finished composite as PNG</li>
+        </ul>
+        <a class="btn" href="./compositor.html">Open Color Compositor &rarr;</a>
+      </div>
+
+      <div class="card">
+        <span class="badge">Assignments</span>
+        <h2>Example Library</h2>
+        <p>A small set of ready-to-use image sets for common assignments &mdash; dark-frame subtraction, RGB composites, false-color imaging &mdash; that load pre-populated into the right tool with one click.</p>
+        <ul>
+          <li>No file hunting for students</li>
+          <li>Grows over time as more sets are added</li>
+          <li>Synthetic data, always available</li>
+        </ul>
+        <a class="btn" href="./examples.html">Open Example Library &rarr;</a>
+      </div>
+    </div>
+
+    <footer>
+      Built on <a href="https://github.com/ericmandel/js9" target="_blank" rel="noopener">JS9</a>, an open-source astronomical image display library from the Center for Astrophysics | Harvard &amp; Smithsonian.
+    </footer>
+  </div>
+</body>
+</html>
