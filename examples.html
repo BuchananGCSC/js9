@@ -92,13 +92,13 @@
   <h1>JS9 Example Library</h1>
   <nav>
     <a href="./index.html">&larr; Home</a>
-    <a href="./student.html">Student Viewer</a>
-    <a href="./compositor.html">Color Compositor</a>
+    <a href="./student.html">Image Processor</a>
+    <a href="./js9.html">Full JS9</a>
   </nav>
 </header>
 
 <div class="wrap">
-  <p class="lede">Ready-made image sets for common assignments. Pick one below and it opens pre-loaded in the right tool &mdash; no need to hunt for files.</p>
+  <p class="lede">Ready-made image sets for common assignments. Pick one below and every image in the set opens pre-loaded in the Image Processor, listed under its <b>Image</b> menu &mdash; no need to hunt for files.</p>
   <div id="categories"></div>
 
   <footer>
@@ -158,7 +158,7 @@
       var a = document.createElement("a");
       a.className = "btn";
       a.href = ex.target + "?example=" + encodeURIComponent(item.key);
-      a.textContent = "Load in " + (ex.target === "student.html" ? "Student Viewer" : "Color Compositor") + " →";
+      a.textContent = "Open in the Image Processor →";
       card.appendChild(a);
 
       cardsDiv.appendChild(card);

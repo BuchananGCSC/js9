@@ -21,8 +21,8 @@ var JS9_EXAMPLES = {
     category: "rgb-composite",
     categoryLabel: "True-Color RGB Composite",
     title: "Spiral Galaxy: Red / Green / Blue Filters",
-    description: "Three exposures of the same galaxy through red, green and blue filters. Assign each to its matching color channel to build a true-color composite — watch for the blue star-forming knots along the spiral arms.",
-    target: "compositor.html",
+    description: "Three exposures of the same galaxy through red, green and blue filters. Give each one its matching colormap from the Color menu, then combine them with Tools \u2192 Blending — watch for the blue star-forming knots along the spiral arms.",
+    target: "student.html",
     channelLabels: { red: "Red filter", green: "Green filter", blue: "Blue filter" },
     files: {
       red: "data/examples/rgb-composite/galaxy_red.fits.gz",
@@ -35,8 +35,8 @@ var JS9_EXAMPLES = {
     category: "false-color",
     categoryLabel: "False-Color Imaging",
     title: "Nebula: Three Wavebands, One Hidden Picture",
-    description: "Three simulated wavebands of the same nebula — each reveals a completely different physical feature (shock filaments, ionized gas, cool dust). Map them to red/green/blue to reveal structure invisible in any single band.",
-    target: "compositor.html",
+    description: "Three simulated wavebands of the same nebula — each reveals a completely different physical feature (shock filaments, ionized gas, cool dust). Give each a colormap (red / green / blue) from the Color menu, then combine them with Tools \u2192 Blending to reveal structure invisible in any single band.",
+    target: "student.html",
     channelLabels: { red: "Longwave (cool dust)", green: "Midwave (ionized gas)", blue: "Shortwave (shock filaments)" },
     files: {
       red: "data/examples/false-color/nebula_band3.fits.gz",

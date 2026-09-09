@@ -13,424 +13,601 @@
 <script type="text/javascript" src="./js9.min.js"></script>
 <script type="text/javascript" src="./js9plugins.js"></script>
 <script type="text/javascript" src="./examples.js"></script>
-<title>JS9 Student Viewer</title>
+<title>JS9 Image Processor</title>
 <style>
   :root{
-    --bg: #f4f6f8;
-    --panel-bg: #ffffff;
-    --border: #d7dde3;
-    --text: #1b2430;
-    --muted: #5a6572;
-    --accent: #2f6fed;
-    --accent-dark: #1f4fb8;
-    --good: #1c8a4b;
+    --page-bg:      #6b7fa8;
+    --plate:        #e9e9e9;
+    --panel:        #f4f3f1;
+    --panel-edge:   #cfcdc9;
+    --bar-bg:       #2b2b2b;
+    --bar-text:     #e8a463;
+    --heading:      #2b3a67;
+    --label:        #2b3a67;
+    --field-edge:   #d79a3c;
+    --btn-face:     #2f2f2f;
+    --btn-glyph:    #3b9bf5;
+    --thumb:        #2a9d9b;
+    --track:        #111;
   }
   *{ box-sizing: border-box; }
   html, body{
     margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--page-bg);
+    font-family: "Avenir Next", "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    color: #1b2430;
   }
-  header{
+
+  /* ---------- top strip: title + jump links ---------- */
+  .topstrip{
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    padding: 14px 20px;
-    background: var(--panel-bg);
-    border-bottom: 1px solid var(--border);
-  }
-  header h1{ font-size: 18px; margin: 0; }
-  header nav a{
-    font-size: 13px;
-    color: var(--accent-dark);
-    text-decoration: none;
-    margin-left: 16px;
-  }
-  header nav a:hover{ text-decoration: underline; }
-  .layout{
-    display: flex;
-    align-items: flex-start;
-    gap: 20px;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+    gap: 16px;
+    padding: 10px 18px 6px;
     flex-wrap: wrap;
   }
-  .viewer{
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    flex: 1 1 520px;
+  .topstrip h1{
+    font-size: 17px;
+    margin: 0;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: .01em;
   }
-  .viewer .JS9{ margin: 0 auto; }
-  .status-line{
-    margin-top: 10px;
+  .topstrip nav a{
     font-size: 13px;
-    color: var(--muted);
-    min-height: 18px;
+    color: #e8eefb;
+    text-decoration: none;
+    margin-left: 15px;
   }
-  .controls{
-    flex: 0 0 320px;
+  .topstrip nav a:hover{ text-decoration: underline; }
+
+  /* ---------- main frame ---------- */
+  .frame{
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 0 18px 24px;
+    flex-wrap: wrap;
   }
-  .panel{
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px 18px;
+  .imageside{ flex: 0 1 auto; }
+
+  /* JS9's own menubar, restyled as the dark 4L-style bar */
+  .JS9Menubar{
+    background: var(--bar-bg) !important;
+    border: none !important;
+    border-radius: 7px 7px 0 0;
+    padding: 3px 4px !important;
+    max-width: 100%;
   }
-  .panel h2{
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    color: var(--muted);
-    margin: 0 0 12px;
-  }
-  .field{ margin-bottom: 12px; }
-  .field:last-child{ margin-bottom: 0; }
-  .field label{
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-  .field .hint{
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-  input[type="file"]{ font-size: 13px; width: 100%; }
-  select{
-    width: 100%;
-    padding: 6px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    font-size: 13px;
-    background: #fff;
-  }
-  input[type="range"]{ width: 100%; }
-  .row{ display: flex; gap: 8px; }
-  .row button{ flex: 1; }
-  button{
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: #fff;
-    color: var(--text);
+  .JS9Menubar .JS9Button,
+  .JS9Menubar button{
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: var(--bar-text) !important;
+    font-family: inherit !important;
+    font-size: 14.5px !important;
+    font-weight: 600 !important;
+    padding: 7px 13px !important;
+    letter-spacing: .01em;
     cursor: pointer;
   }
-  button:hover{ background: #f0f2f5; }
-  button.primary{
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+  .JS9Menubar .JS9Button:hover,
+  .JS9Menubar button:hover{
+    background: #f2f1ef !important;
+    color: #b4600f !important;
+    border-radius: 4px 4px 0 0;
   }
-  button.primary:hover{ background: var(--accent-dark); }
-  button:disabled{
-    opacity: .45;
-    cursor: not-allowed;
+  .JS9Menubar button:disabled{ opacity: .45; }
+
+  /* light plate the image sits on, echoing the 4L look */
+  .plate{
+    background: var(--plate);
+    padding: 14px 14px 8px;
+    border-radius: 0 0 7px 7px;
   }
-  .loaded-tag{
-    display: inline-block;
-    margin-top: 6px;
+  .plate .JS9{ margin: 0 auto; }
+  .plate .JS9Colorbar{ margin-top: 10px; }
+
+  /* ---------- right-hand Information / Controls card ---------- */
+  .sidecard{
+    flex: 0 0 340px;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 14px;
+    padding: 14px 18px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.18);
+  }
+  .sidecard h2{
+    font-size: 21px;
+    color: var(--heading);
+    text-align: center;
+    margin: 6px 0 12px;
+    font-weight: 700;
+  }
+  .info-line{
+    font-size: 13.5px;
+    color: var(--heading);
+    margin-bottom: 7px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+  .info-line .val{
+    color: #1f8a3d;
+    font-style: italic;
+    font-weight: 600;
+  }
+  .divider{
+    border: 0;
+    border-top: 1px solid var(--panel-edge);
+    margin: 16px 0 4px;
+  }
+
+  .ctl{ margin-bottom: 15px; }
+  .ctl > label{
+    display: block;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--label);
+    margin-bottom: 7px;
+  }
+  .ctl-row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+  }
+  .stepbtn{
+    width: 52px;
+    height: 30px;
+    border-radius: 7px;
+    border: 1px solid #111;
+    background: linear-gradient(#3d3d3d, #232323);
+    color: var(--btn-glyph);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .stepbtn:hover{ background: linear-gradient(#4a4a4a, #2c2c2c); }
+  .stepbtn:disabled{ opacity: .4; cursor: not-allowed; }
+  .numfield{
+    width: 88px;
+    height: 30px;
+    text-align: center;
+    font-size: 15px;
+    font-family: inherit;
+    border: 2px solid var(--field-edge);
+    border-radius: 7px;
+    background: #fff;
+    color: #1b2430;
+  }
+  .numfield:disabled{ background: #eceae7; color: #9a9a9a; }
+  input[type="range"]{
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 13px;
+    margin-top: 9px;
+    border-radius: 7px;
+    background: var(--track);
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance: none;
+    width: 17px;
+    height: 24px;
+    border-radius: 9px;
+    background: var(--thumb);
+    border: none;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width: 17px;
+    height: 24px;
+    border-radius: 9px;
+    background: var(--thumb);
+    border: none;
+  }
+  input[type="range"]:disabled{ opacity: .45; }
+
+  .hint{
     font-size: 12px;
-    color: var(--good);
+    color: #5a6572;
+    line-height: 1.45;
+    margin: 14px 0 0;
   }
-  .explainer{
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.5;
-    margin: 0 0 12px;
-  }
-  .example-banner{
+  .assignment{
     background: #eaf1ff;
     border: 1px solid #c6d9fb;
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 16px;
+    border-radius: 9px;
+    padding: 11px 13px;
+    margin: 0 18px 12px;
     font-size: 13px;
     line-height: 1.5;
+    color: #1b2430;
   }
-  .example-banner strong{ display: block; margin-bottom: 2px; }
-  .example-banner a{ color: var(--accent-dark); }
+  .assignment strong{ display: block; margin-bottom: 2px; }
+  .assignment a{ color: #1f4fb8; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>JS9 Student Viewer</h1>
+<div class="topstrip">
+  <h1>JS9 Image Processor</h1>
   <nav>
-    <a href="./index.html">&larr; Home</a>
-    <a href="./examples.html">Example Library</a>
-    <a href="./js9.html">Full Desktop Interface</a>
+    <a href="./index.html">Home</a>
+    <a href="./examples.html">Archived Images</a>
+    <a href="./js9.html">Full JS9</a>
   </nav>
-</header>
+</div>
 
-<div class="layout">
+<div id="assignment" class="assignment" style="display:none"></div>
 
-  <div class="viewer">
-    <div id="exampleBanner" class="example-banner" style="display:none"></div>
-    <div class="JS9"></div>
-    <div class="JS9Colorbar"></div>
-    <div class="status-line" id="statusLine">Load a light frame to get started.</div>
+<div class="frame">
+  <div class="imageside">
+    <div class="JS9Menubar" data-width="100%"></div>
+    <div class="plate">
+      <div class="JS9" data-width="620px" data-height="620px"></div>
+      <div class="JS9Colorbar" data-width="620px"></div>
+    </div>
   </div>
 
-  <div class="controls">
+  <div class="sidecard">
+    <h2>Information</h2>
+    <div class="info-line">Image Displayed:<br><span class="val" id="infoImage">&mdash;</span></div>
+    <div class="info-line">Pixel Value: <span class="val" id="infoValue">(undefined)</span></div>
+    <div class="info-line">Physical Location: <span class="val" id="infoPos">(&mdash; , &mdash;)</span></div>
 
-    <div class="panel">
-      <h2>1. Load Your Images</h2>
-      <div class="field">
-        <label for="lightFile">Light frame (your image)</label>
-        <input type="file" id="lightFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
-        <div class="loaded-tag" id="lightTag"></div>
+    <hr class="divider">
+    <h2>Controls</h2>
+
+    <div class="ctl">
+      <label for="loNum">Low Brightness Limit</label>
+      <div class="ctl-row">
+        <button class="stepbtn" id="loMinus" type="button" disabled>&minus;</button>
+        <input class="numfield" id="loNum" type="number" disabled>
+        <button class="stepbtn" id="loPlus" type="button" disabled>+</button>
       </div>
-      <div class="field">
-        <label for="darkFile">Dark frame (sensor noise, no light)</label>
-        <input type="file" id="darkFile" accept=".fits,.fits.gz,.fz,image/fits,image/png,image/jpeg">
-        <div class="loaded-tag" id="darkTag"></div>
-        <div class="hint">Optional &mdash; only needed for the dark-subtraction step below.</div>
-      </div>
+      <input type="range" id="loRange" disabled>
     </div>
 
-    <div class="panel">
-      <h2>2. Adjust the Display</h2>
-      <div class="field">
-        <label for="cmapSelect">Colormap</label>
-        <select id="cmapSelect">
-          <option value="grey" selected>grey</option>
-          <option value="heat">heat</option>
-          <option value="cool">cool</option>
-          <option value="turbo">turbo</option>
-          <option value="viridis">viridis</option>
-          <option value="magma">magma</option>
-          <option value="sls">sls</option>
-          <option value="red">red</option>
-          <option value="green">green</option>
-          <option value="blue">blue</option>
-        </select>
+    <div class="ctl">
+      <label for="hiNum">High Brightness Limit</label>
+      <div class="ctl-row">
+        <button class="stepbtn" id="hiMinus" type="button" disabled>&minus;</button>
+        <input class="numfield" id="hiNum" type="number" disabled>
+        <button class="stepbtn" id="hiPlus" type="button" disabled>+</button>
       </div>
-      <div class="field">
-        <label for="scaleSelect">Scale</label>
-        <select id="scaleSelect">
-          <option value="linear" selected>linear</option>
-          <option value="log">log</option>
-          <option value="sqrt">sqrt</option>
-          <option value="asinh">asinh</option>
-          <option value="histeq">histogram equalize</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="contrastSlider">Contrast</label>
-        <input type="range" id="contrastSlider" min="0" max="10" step="0.1" value="1">
-      </div>
-      <div class="field">
-        <label for="biasSlider">Brightness (bias)</label>
-        <input type="range" id="biasSlider" min="0" max="1" step="0.01" value="0.5">
-      </div>
-      <div class="field">
-        <label>Zoom</label>
-        <div class="row">
-          <button id="zoomOutBtn" type="button">&minus; Out</button>
-          <button id="zoomResetBtn" type="button">1:1</button>
-          <button id="zoomInBtn" type="button">+ In</button>
-        </div>
-      </div>
+      <input type="range" id="hiRange" disabled>
     </div>
 
-    <div class="panel">
-      <h2>3. Subtract the Dark Frame</h2>
-      <p class="explainer">
-        A dark frame captures the noise your camera sensor produces even with
-        no light coming in. Subtracting it from your light frame removes that
-        fixed noise pattern, leaving a cleaner image of just the object you
-        photographed. Both images must be the same pixel dimensions.
-      </p>
-      <div class="row">
-        <button id="subtractBtn" class="primary" type="button" disabled>Subtract Dark Frame</button>
-        <button id="undoSubtractBtn" type="button" disabled>Undo</button>
+    <div class="ctl">
+      <label for="conNum">Stretch/Contrast</label>
+      <div class="ctl-row">
+        <button class="stepbtn" id="conMinus" type="button" disabled>&minus;</button>
+        <input class="numfield" id="conNum" type="number" step="0.1" disabled>
+        <button class="stepbtn" id="conPlus" type="button" disabled>+</button>
       </div>
+      <input type="range" id="conRange" min="0" max="10" step="0.05" value="1" disabled>
     </div>
 
-    <div class="panel">
-      <h2>4. Save Your Result</h2>
-      <button id="saveBtn" class="primary" type="button" style="width:100%" disabled>Save as PNG</button>
+    <div class="ctl">
+      <label for="biasNum">Shift/Bias</label>
+      <div class="ctl-row">
+        <button class="stepbtn" id="biasMinus" type="button" disabled>&minus;</button>
+        <input class="numfield" id="biasNum" type="number" step="0.01" disabled>
+        <button class="stepbtn" id="biasPlus" type="button" disabled>+</button>
+      </div>
+      <input type="range" id="biasRange" min="0" max="1" step="0.01" value="0.5" disabled>
     </div>
 
+    <p class="hint">
+      Open images from the <b>Image</b> menu. Everything else &mdash; colormaps,
+      scaling, regions, image math, blending &mdash; lives in the menus above the
+      picture. <b>Tools &rarr; ImageMath</b> subtracts one image from another;
+      <b>Tools &rarr; Blending</b> combines images into color.
+    </p>
   </div>
 </div>
 
 <script type="text/javascript">
-(function(){
-  "use strict";
+/* ------------------------------------------------------------------
+ * A JS9-4L-style skin: JS9's real menubar (trimmed and relabelled)
+ * plus a large-format Information / Controls panel. The panel drives
+ * only the four display parameters 4L exposes; every actual operation
+ * stays in the menus so students have to find it themselves.
+ * ------------------------------------------------------------------ */
 
-  // keep track of the JS9 image ids for the two loaded frames
-  var state = {
-    lightId: null,
-    darkId: null
+/* --- trim + relabel the menubar (must run before JS9 initializes) --- */
+JS9.globalOpts.menuBar = ["file", "view", "zoom", "scale", "color",
+                          "region", "analysis", "help"];
+JS9.globalOpts.menubarStyle = "classic";
+
+(function relabelMenus(){
+  "use strict";
+  // "File" and "View" don't read well for students: the file menu is where
+  // images are opened and listed, and the view menu is where the plugin
+  // tools live. Rename them through JS9's own label table.
+  var titles = { file: "Image", view: "Tools" };
+  if( JS9.Menubar && JS9.Menubar.buttonOptsArr ){
+    JS9.Menubar.buttonOptsArr.forEach(function(b){
+      if( titles[b.name] ){ b.label = titles[b.name]; }
+    });
+  }
+  // Which tools appear in the Tools menu. Stock JS9 lists all ~23 plugins,
+  // which is a lot to hand a beginner; this trims it to the set JS9-4L
+  // exposes. To put one back, add its name to this list -- the full set of
+  // names is: ArchivesCatalogs, Binning, Blend, Blink, Colorbar, Cmaps,
+  // Console, Contours, Cube, Mef, Filters, Imarith, Info, Keyboard,
+  // Magnifier, MouseTouch, Panner, PxTabl, Separate, Layers, Divs,
+  // Statusbar, SyncUI, Toolbar
+  var TOOLS_MENU = ["Info", "PxTabl", "Magnifier", "Panner",
+                    "Imarith", "Blink", "Blend", "Filters"];
+
+  // friendlier labels for the tools students actually use
+  var relabel = {
+    Imarith: "ImageMath",
+    Blend:   "Blending",
+    Blink:   "Blinking",
+    Info:    "Information/Control"
   };
 
-  var statusLine = document.getElementById("statusLine");
-  var lightTag = document.getElementById("lightTag");
-  var darkTag = document.getElementById("darkTag");
-  var subtractBtn = document.getElementById("subtractBtn");
-  var undoSubtractBtn = document.getElementById("undoSubtractBtn");
-  var saveBtn = document.getElementById("saveBtn");
-
-  function setStatus(msg){
-    statusLine.textContent = msg;
-  }
-
-  function refreshButtons(){
-    subtractBtn.disabled = !(state.lightId && state.darkId);
-    saveBtn.disabled = !state.lightId;
-  }
-
-  // ---- loading images ----
-
-  function finishLoad(im, slot, tagEl, label){
-    if(!im){
-      setStatus("Could not load " + label + ". Please check the file.");
-      return;
+  if( !JS9.plugins ){ return; }
+  JS9.plugins.forEach(function(p){
+    if( !p || !p.opts || !p.opts.menuItem ){ return; }
+    if( relabel[p.xname] ){ p.opts.menuItem = relabel[p.xname]; }
+    // hide the tools we're not offering (leaves the plugin itself intact,
+    // it just stops appearing in the menu)
+    if( p.opts.menu === "view" && TOOLS_MENU.indexOf(p.xname) === -1 ){
+      delete p.opts.menuItem;
     }
-    state[slot] = im.id;
-    tagEl.textContent = "Loaded: " + label;
-    // make sure the light frame stays the one shown on screen (loading an
-    // image displays it by default, so a dark frame loaded after the light
-    // frame would otherwise end up the visible one)
-    if(state.lightId){
-      try{ JS9.DisplayImage("all", {display: state.lightId}); }catch(e){ /* ignore */ }
-    }
-    setStatus(label + " loaded.");
-    refreshButtons();
+  });
+})();
+
+(function skin(){
+  "use strict";
+
+  /* --- teacher-tunable default ------------------------------------------
+   * How a freshly opened image gets scaled:
+   *   "dataminmax" - full data range (JS9's default). Faint objects look
+   *                  dark until the student lowers the High Brightness
+   *                  Limit, which is the point of the exercise.
+   *   "zscale"     - the astronomer's auto-stretch. Looks good immediately,
+   *                  but hands the student the answer.
+   * Students can switch between these themselves from the Scale menu.
+   * -------------------------------------------------------------------- */
+  var OPEN_SCALE = "dataminmax";
+
+  var CON_DEFAULT = 1.0, BIAS_DEFAULT = 0.5;
+  var range = null;      // {lo, hi} full data range of the current image
+  var holding = false;   // true while the user is actively editing a control
+
+  function $id(id){ return document.getElementById(id); }
+
+  var els = {
+    infoImage: $id("infoImage"), infoValue: $id("infoValue"), infoPos: $id("infoPos"),
+    loNum: $id("loNum"), loRange: $id("loRange"),
+    hiNum: $id("hiNum"), hiRange: $id("hiRange"),
+    conNum: $id("conNum"), conRange: $id("conRange"),
+    biasNum: $id("biasNum"), biasRange: $id("biasRange")
+  };
+
+  var allInputs = ["loNum","loRange","hiNum","hiRange",
+                   "conNum","conRange","biasNum","biasRange"];
+  var allButtons = ["loMinus","loPlus","hiMinus","hiPlus",
+                    "conMinus","conPlus","biasMinus","biasPlus"];
+
+  function setEnabled(on){
+    allInputs.forEach(function(k){ els[k].disabled = !on; });
+    allButtons.forEach(function(k){ $id(k).disabled = !on; });
   }
 
-  function handleFileLoad(fileInputId, slot, tagEl){
-    document.getElementById(fileInputId).addEventListener("change", function(evt){
-      var files = evt.target.files;
-      if(!files || !files.length){ return; }
-      var f = files[0];
-      setStatus("Loading " + f.name + " ...");
-      JS9.Load(f, { onload: function(im){ finishLoad(im, slot, tagEl, f.name); } });
+  function haveImage(){
+    try{ return !!JS9.GetImageData(); }catch(e){ return false; }
+  }
+
+  function fmt(v, decimals){
+    if( v === undefined || v === null || isNaN(v) ){ return ""; }
+    var d = (decimals === undefined) ? 0 : decimals;
+    return (Math.abs(v) < 1000 && d === 0) ? String(Math.round(v)) : v.toFixed(d);
+  }
+
+  /* ---------------- apply panel -> image ---------------- */
+
+  function applyLimits(){
+    var lo = parseFloat(els.loNum.value), hi = parseFloat(els.hiNum.value);
+    if( isNaN(lo) || isNaN(hi) ){ return; }
+    try{ JS9.SetScale(lo, hi); }catch(e){ /* ignore */ }
+  }
+
+  function applyColor(){
+    var con = parseFloat(els.conNum.value), bias = parseFloat(els.biasNum.value);
+    if( isNaN(con) || isNaN(bias) ){ return; }
+    try{ JS9.SetColormap(con, bias); }catch(e){ /* ignore */ }
+  }
+
+  /* ---------------- wire one control (num + slider + -/+) ---------------- */
+
+  function wire(numEl, rangeEl, minusId, plusId, step, decimals, apply){
+    function push(v){
+      if( isNaN(v) ){ return; }
+      var lo = parseFloat(rangeEl.min), hi = parseFloat(rangeEl.max);
+      if( !isNaN(lo) ){ v = Math.max(lo, v); }
+      if( !isNaN(hi) ){ v = Math.min(hi, v); }
+      numEl.value = decimals ? v.toFixed(decimals) : fmt(v, 0);
+      rangeEl.value = v;
+      apply();
+    }
+    rangeEl.addEventListener("input", function(){
+      holding = true;
+      push(parseFloat(rangeEl.value));
+    });
+    rangeEl.addEventListener("change", function(){ holding = false; });
+    numEl.addEventListener("change", function(){ push(parseFloat(numEl.value)); });
+    numEl.addEventListener("focus", function(){ holding = true; });
+    numEl.addEventListener("blur", function(){ holding = false; });
+    $id(minusId).addEventListener("click", function(){
+      push(parseFloat(numEl.value) - stepSize(step, rangeEl));
+    });
+    $id(plusId).addEventListener("click", function(){
+      push(parseFloat(numEl.value) + stepSize(step, rangeEl));
     });
   }
 
-  handleFileLoad("lightFile", "lightId", lightTag);
-  handleFileLoad("darkFile", "darkId", darkTag);
+  function stepSize(step, rangeEl){
+    if( step !== "auto" ){ return step; }
+    // brightness limits: step by 1% of the image's data range
+    var lo = parseFloat(rangeEl.min), hi = parseFloat(rangeEl.max);
+    if( isNaN(lo) || isNaN(hi) || hi <= lo ){ return 1; }
+    return Math.max((hi - lo) / 100, 1e-6);
+  }
 
-  // ---- load a preset example from examples.js via ?example=key ----
+  wire(els.loNum, els.loRange, "loMinus", "loPlus", "auto", 0, applyLimits);
+  wire(els.hiNum, els.hiRange, "hiMinus", "hiPlus", "auto", 0, applyLimits);
+  wire(els.conNum, els.conRange, "conMinus", "conPlus", 0.1, 2, applyColor);
+  wire(els.biasNum, els.biasRange, "biasMinus", "biasPlus", 0.05, 2, applyColor);
+
+  /* ---------------- sync image -> panel ---------------- */
+
+  function captureRange(){
+    // right after a load JS9 clips to the full data range, so GetScale()
+    // hands us dmin/dmax -- remember them as the slider bounds
+    var s;
+    try{ s = JS9.GetScale(); }catch(e){ return; }
+    if( !s || isNaN(s.scalemin) || isNaN(s.scalemax) ){ return; }
+    range = { lo: s.scalemin, hi: s.scalemax };
+    var pad = (range.hi - range.lo) * 0.25 || 1;
+    [els.loRange, els.hiRange].forEach(function(r){
+      r.min = range.lo - pad;
+      r.max = range.hi + pad;
+      r.step = Math.max((range.hi - range.lo) / 1000, 1e-6);
+    });
+  }
+
+  function syncPanel(){
+    if( holding ){ return; }
+    if( !haveImage() ){
+      setEnabled(false);
+      els.infoImage.innerHTML = "&mdash;";
+      return;
+    }
+    setEnabled(true);
+
+    var d, s, c;
+    try{ d = JS9.GetImageData(); }catch(e){ d = null; }
+    if( d && d.id ){ els.infoImage.textContent = d.id; }
+
+    try{ s = JS9.GetScale(); }catch(e){ s = null; }
+    if( s && !isNaN(s.scalemin) && !isNaN(s.scalemax) ){
+      if( !range || parseFloat(els.loRange.min) > s.scalemin ||
+                    parseFloat(els.loRange.max) < s.scalemax ){
+        captureRange();
+      }
+      if( document.activeElement !== els.loNum ){
+        els.loNum.value = fmt(s.scalemin, 0);
+        els.loRange.value = s.scalemin;
+      }
+      if( document.activeElement !== els.hiNum ){
+        els.hiNum.value = fmt(s.scalemax, 0);
+        els.hiRange.value = s.scalemax;
+      }
+    }
+
+    try{ c = JS9.GetColormap(); }catch(e){ c = null; }
+    if( c ){
+      var con = (c.contrast === undefined) ? CON_DEFAULT : c.contrast;
+      var bias = (c.bias === undefined) ? BIAS_DEFAULT : c.bias;
+      if( document.activeElement !== els.conNum ){
+        els.conNum.value = con.toFixed(2);
+        els.conRange.value = con;
+      }
+      if( document.activeElement !== els.biasNum ){
+        els.biasNum.value = bias.toFixed(2);
+        els.biasRange.value = bias;
+      }
+    }
+  }
+
+  /* ---------------- live pixel readout ---------------- */
+
+  function readout(evt){
+    var d, dpos, ipos, ppos, val, w, h;
+    try{
+      d = JS9.GetImageData(true);
+      if( !d || !d.data ){ return; }
+      dpos = JS9.EventToDisplayPos(evt);
+      ipos = JS9.DisplayToImagePos(dpos);
+      if( !ipos ){ return; }
+      w = d.width; h = d.height;
+      var ix = Math.floor(ipos.x - 0.5), iy = Math.floor(ipos.y - 0.5);
+      if( ix < 0 || iy < 0 || ix >= w || iy >= h ){
+        els.infoValue.textContent = "(undefined)";
+      } else {
+        val = d.data[iy * w + ix];
+        els.infoValue.textContent = (val === undefined) ? "(undefined)" :
+          "(" + (Math.abs(val) >= 1000 ? Math.round(val) : Number(val.toFixed(3))) + ")";
+      }
+      try{ ppos = JS9.ImageToLogicalPos(ipos); }catch(e){ ppos = ipos; }
+      els.infoPos.textContent = "(" + Math.round(ppos.x) + " , " + Math.round(ppos.y) + ")";
+    }catch(e){ /* ignore pointer noise */ }
+  }
+
+  /* ---------------- assignment banner + preset loading ---------------- */
 
   function loadExample(key){
     var ex = window.JS9_EXAMPLES && JS9_EXAMPLES[key];
-    if(!ex || !ex.files || !ex.files.light || !ex.files.dark){
-      setStatus("Unknown or incompatible example: " + key);
-      return;
-    }
-    var banner = document.getElementById("exampleBanner");
+    if( !ex || !ex.files ){ return; }
+
+    var banner = $id("assignment");
     banner.style.display = "block";
     banner.innerHTML = "<strong>" + ex.title + "</strong>" + ex.description +
-      " &mdash; <a href=\"./student.html\">load your own images instead</a>";
+      " &mdash; the images below are loaded and listed under the <b>Image</b> " +
+      "menu; switch between them there. <a href=\"./student.html\">Start with a blank workspace</a>";
 
-    setStatus("Loading example: " + ex.title + " ...");
-    JS9.Load(ex.files.light, { onload: function(im){
-      finishLoad(im, "lightId", lightTag, "light frame (example)");
-    }});
-    JS9.Load(ex.files.dark, { onload: function(im){
-      finishLoad(im, "darkId", darkTag, "dark frame (example)");
-    }});
+    // Load every file in the set into this one display. JS9.Load is async and
+    // displays whatever finishes last, so load them one at a time and put the
+    // set's primary frame (light / red) last so it's the one left on screen.
+    var keys = Object.keys(ex.files);
+    var order = keys.slice(1).reverse().concat([keys[0]])
+                    .map(function(k){ return ex.files[k]; });
+
+    (function loadNext(i){
+      if( i >= order.length ){
+        if( OPEN_SCALE !== "dataminmax" ){
+          try{ JS9.SetScale(OPEN_SCALE); }catch(e){ /* ignore */ }
+        }
+        captureRange();
+        syncPanel();
+        return;
+      }
+      JS9.Load(order[i], { onload: function(){ loadNext(i + 1); } });
+    })(0);
   }
 
-  // JS9 finishes initializing (display created, WASM FITS module loaded,
-  // etc.) asynchronously and signals "JS9:ready" on $(document) when done.
-  // Loading a FITS file before that fires can fail silently, so wait for it.
-  function whenJS9Ready(fn){
-    if(window.JS9 && JS9.readied){ fn(); }
+  /* ---------------- startup ---------------- */
+
+  function whenReady(fn){
+    if( window.JS9 && JS9.readied ){ fn(); }
     else { $(document).on("JS9:ready", fn); }
   }
 
-  whenJS9Ready(function(){
-    var params = new URLSearchParams(window.location.search);
-    var key = params.get("example");
-    if(key){ loadExample(key); }
-  });
+  whenReady(function(){
+    // live readout on the image canvas
+    $(".JS9").on("mousemove", readout);
+    $(".JS9").on("mouseleave", function(){
+      els.infoValue.textContent = "(undefined)";
+    });
 
-  // ---- colormap / scale / contrast / bias ----
+    var key = new URLSearchParams(window.location.search).get("example");
+    if( key ){ loadExample(key); }
 
-  document.getElementById("cmapSelect").addEventListener("change", function(evt){
-    if(!state.lightId){ return; }
-    try{ JS9.SetColormap(evt.target.value, {display: state.lightId}); }
-    catch(e){ setStatus("Could not change colormap: " + e.message); }
-  });
-
-  document.getElementById("scaleSelect").addEventListener("change", function(evt){
-    if(!state.lightId){ return; }
-    try{ JS9.SetScale(evt.target.value, {display: state.lightId}); }
-    catch(e){ setStatus("Could not change scale: " + e.message); }
-  });
-
-  function applyContrastBias(){
-    if(!state.lightId){ return; }
-    var contrast = parseFloat(document.getElementById("contrastSlider").value);
-    var bias = parseFloat(document.getElementById("biasSlider").value);
-    try{ JS9.SetColormap(contrast, bias, {display: state.lightId}); }
-    catch(e){ /* ignore transient errors while dragging */ }
-  }
-  document.getElementById("contrastSlider").addEventListener("input", applyContrastBias);
-  document.getElementById("biasSlider").addEventListener("input", applyContrastBias);
-
-  // ---- zoom ----
-
-  document.getElementById("zoomInBtn").addEventListener("click", function(){
-    if(!state.lightId){ return; }
-    try{ JS9.SetZoom(JS9.GetZoom({display: state.lightId}) * 2, {display: state.lightId}); }catch(e){ /* ignore */ }
-  });
-  document.getElementById("zoomOutBtn").addEventListener("click", function(){
-    if(!state.lightId){ return; }
-    try{ JS9.SetZoom(JS9.GetZoom({display: state.lightId}) / 2, {display: state.lightId}); }catch(e){ /* ignore */ }
-  });
-  document.getElementById("zoomResetBtn").addEventListener("click", function(){
-    if(!state.lightId){ return; }
-    try{ JS9.SetZoom(1, {display: state.lightId}); }catch(e){ /* ignore */ }
-  });
-
-  // ---- dark frame subtraction ----
-
-  subtractBtn.addEventListener("click", function(){
-    if(!state.lightId || !state.darkId){ return; }
-    try{
-      JS9.ImarithData("sub", state.darkId, {display: state.lightId});
-      undoSubtractBtn.disabled = false;
-      setStatus("Dark frame subtracted.");
-    }catch(e){
-      setStatus("Could not subtract: " + e.message + " (are both images the same size?)");
-    }
-  });
-
-  undoSubtractBtn.addEventListener("click", function(){
-    if(!state.lightId){ return; }
-    try{
-      JS9.ImarithData("reset", {display: state.lightId});
-      undoSubtractBtn.disabled = true;
-      setStatus("Subtraction undone.");
-    }catch(e){
-      setStatus("Could not undo: " + e.message);
-    }
-  });
-
-  // ---- save ----
-
-  saveBtn.addEventListener("click", function(){
-    if(!state.lightId){ return; }
-    try{
-      JS9.SavePNG({display: state.lightId});
-    }catch(e){
-      setStatus("Could not save: " + e.message);
-    }
+    setEnabled(false);
+    syncPanel();
+    // keep the panel honest no matter how the image was changed
+    // (menus, image math, or dragging contrast/bias on the image itself)
+    setInterval(syncPanel, 400);
   });
 
 })();
