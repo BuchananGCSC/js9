@@ -25,9 +25,10 @@ a.out.dSYM
 /src/Makefile
 /astroem/jsfitsio/Makefile
 /astroem/wrappers/Makefile
-/data
 /tests2
 /notes
 /old
 /tmp
 /talks
+/data/*
+!/data/examples

@@ -12,6 +12,7 @@
 <script type="text/javascript" src="./js9support.min.js"></script>
 <script type="text/javascript" src="./js9.min.js"></script>
 <script type="text/javascript" src="./js9plugins.js"></script>
+<script type="text/javascript" src="./examples.js"></script>
 <title>JS9 Student Viewer</title>
 <style>
   :root{
@@ -147,6 +148,17 @@
     line-height: 1.5;
     margin: 0 0 12px;
   }
+  .example-banner{
+    background: #eaf1ff;
+    border: 1px solid #c6d9fb;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .example-banner strong{ display: block; margin-bottom: 2px; }
+  .example-banner a{ color: var(--accent-dark); }
 </style>
 </head>
 <body>
@@ -155,6 +167,7 @@
   <h1>JS9 Student Viewer</h1>
   <nav>
     <a href="./index.html">&larr; Home</a>
+    <a href="./examples.html">Example Library</a>
     <a href="./js9.html">Full Desktop Interface</a>
   </nav>
 </header>
@@ -162,6 +175,7 @@
 <div class="layout">
 
   <div class="viewer">
+    <div id="exampleBanner" class="example-banner" style="display:none"></div>
     <div class="JS9"></div>
     <div class="JS9Colorbar"></div>
     <div class="status-line" id="statusLine">Load a light frame to get started.</div>
@@ -279,45 +293,83 @@
 
   // ---- loading images ----
 
+  function finishLoad(im, slot, tagEl, label){
+    if(!im){
+      setStatus("Could not load " + label + ". Please check the file.");
+      return;
+    }
+    state[slot] = im.id;
+    tagEl.textContent = "Loaded: " + label;
+    // make sure the light frame stays the one shown on screen (loading an
+    // image displays it by default, so a dark frame loaded after the light
+    // frame would otherwise end up the visible one)
+    if(state.lightId){
+      try{ JS9.DisplayImage("all", {display: state.lightId}); }catch(e){ /* ignore */ }
+    }
+    setStatus(label + " loaded.");
+    refreshButtons();
+  }
+
   function handleFileLoad(fileInputId, slot, tagEl){
     document.getElementById(fileInputId).addEventListener("change", function(evt){
       var files = evt.target.files;
       if(!files || !files.length){ return; }
       var f = files[0];
       setStatus("Loading " + f.name + " ...");
-      JS9.Load(f, {
-        onload: function(im){
-          if(!im){
-            setStatus("Could not load " + f.name + ". Please check the file.");
-            return;
-          }
-          state[slot] = im.id;
-          tagEl.textContent = "Loaded: " + f.name;
-          // make sure the light frame stays the one on screen
-          if(state.lightId){
-            try{ JS9.DisplayImage(state.lightId); }catch(e){ /* ignore */ }
-          }
-          setStatus(f.name + " loaded.");
-          refreshButtons();
-        }
-      });
+      JS9.Load(f, { onload: function(im){ finishLoad(im, slot, tagEl, f.name); } });
     });
   }
 
   handleFileLoad("lightFile", "lightId", lightTag);
   handleFileLoad("darkFile", "darkId", darkTag);
 
+  // ---- load a preset example from examples.js via ?example=key ----
+
+  function loadExample(key){
+    var ex = window.JS9_EXAMPLES && JS9_EXAMPLES[key];
+    if(!ex || !ex.files || !ex.files.light || !ex.files.dark){
+      setStatus("Unknown or incompatible example: " + key);
+      return;
+    }
+    var banner = document.getElementById("exampleBanner");
+    banner.style.display = "block";
+    banner.innerHTML = "<strong>" + ex.title + "</strong>" + ex.description +
+      " &mdash; <a href=\"./student.html\">load your own images instead</a>";
+
+    setStatus("Loading example: " + ex.title + " ...");
+    JS9.Load(ex.files.light, { onload: function(im){
+      finishLoad(im, "lightId", lightTag, "light frame (example)");
+    }});
+    JS9.Load(ex.files.dark, { onload: function(im){
+      finishLoad(im, "darkId", darkTag, "dark frame (example)");
+    }});
+  }
+
+  // JS9 finishes initializing (display created, WASM FITS module loaded,
+  // etc.) asynchronously and signals "JS9:ready" on $(document) when done.
+  // Loading a FITS file before that fires can fail silently, so wait for it.
+  function whenJS9Ready(fn){
+    if(window.JS9 && JS9.readied){ fn(); }
+    else { $(document).on("JS9:ready", fn); }
+  }
+
+  whenJS9Ready(function(){
+    var params = new URLSearchParams(window.location.search);
+    var key = params.get("example");
+    if(key){ loadExample(key); }
+  });
+
   // ---- colormap / scale / contrast / bias ----
 
   document.getElementById("cmapSelect").addEventListener("change", function(evt){
     if(!state.lightId){ return; }
-    try{ JS9.SetColormap(evt.target.value); }
+    try{ JS9.SetColormap(evt.target.value, {display: state.lightId}); }
     catch(e){ setStatus("Could not change colormap: " + e.message); }
   });
 
   document.getElementById("scaleSelect").addEventListener("change", function(evt){
     if(!state.lightId){ return; }
-    try{ JS9.SetScale(evt.target.value); }
+    try{ JS9.SetScale(evt.target.value, {display: state.lightId}); }
     catch(e){ setStatus("Could not change scale: " + e.message); }
   });
 
@@ -325,7 +377,7 @@
     if(!state.lightId){ return; }
     var contrast = parseFloat(document.getElementById("contrastSlider").value);
     var bias = parseFloat(document.getElementById("biasSlider").value);
-    try{ JS9.SetColormap(contrast, bias); }
+    try{ JS9.SetColormap(contrast, bias, {display: state.lightId}); }
     catch(e){ /* ignore transient errors while dragging */ }
   }
   document.getElementById("contrastSlider").addEventListener("input", applyContrastBias);
@@ -335,15 +387,15 @@
 
   document.getElementById("zoomInBtn").addEventListener("click", function(){
     if(!state.lightId){ return; }
-    try{ JS9.SetZoom(JS9.GetZoom() * 2); }catch(e){ /* ignore */ }
+    try{ JS9.SetZoom(JS9.GetZoom({display: state.lightId}) * 2, {display: state.lightId}); }catch(e){ /* ignore */ }
   });
   document.getElementById("zoomOutBtn").addEventListener("click", function(){
     if(!state.lightId){ return; }
-    try{ JS9.SetZoom(JS9.GetZoom() / 2); }catch(e){ /* ignore */ }
+    try{ JS9.SetZoom(JS9.GetZoom({display: state.lightId}) / 2, {display: state.lightId}); }catch(e){ /* ignore */ }
   });
   document.getElementById("zoomResetBtn").addEventListener("click", function(){
     if(!state.lightId){ return; }
-    try{ JS9.SetZoom(1); }catch(e){ /* ignore */ }
+    try{ JS9.SetZoom(1, {display: state.lightId}); }catch(e){ /* ignore */ }
   });
 
   // ---- dark frame subtraction ----
@@ -351,8 +403,7 @@
   subtractBtn.addEventListener("click", function(){
     if(!state.lightId || !state.darkId){ return; }
     try{
-      JS9.DisplayImage(state.lightId);
-      JS9.ImarithData("sub", state.darkId);
+      JS9.ImarithData("sub", state.darkId, {display: state.lightId});
       undoSubtractBtn.disabled = false;
       setStatus("Dark frame subtracted.");
     }catch(e){
@@ -363,8 +414,7 @@
   undoSubtractBtn.addEventListener("click", function(){
     if(!state.lightId){ return; }
     try{
-      JS9.DisplayImage(state.lightId);
-      JS9.ImarithData("reset");
+      JS9.ImarithData("reset", {display: state.lightId});
       undoSubtractBtn.disabled = true;
       setStatus("Subtraction undone.");
     }catch(e){
@@ -377,8 +427,7 @@
   saveBtn.addEventListener("click", function(){
     if(!state.lightId){ return; }
     try{
-      JS9.DisplayImage(state.lightId);
-      JS9.SavePNG();
+      JS9.SavePNG({display: state.lightId});
     }catch(e){
       setStatus("Could not save: " + e.message);
     }
