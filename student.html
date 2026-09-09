@@ -471,18 +471,46 @@ JS9.globalOpts.menubarStyle = "classic";
 
   /* ---------------- sync image -> panel ---------------- */
 
+  var lastData = null, lastRange = null;
+
+  // The true min/max of the pixels currently displayed. We can't ask
+  // GetScale() for this: once the student sets their own limits it reports
+  // those instead of the data range, so after an ImageMath operation the
+  // bounds would go stale. Scanning the pixels is authoritative, and the
+  // scan only runs when the data actually changes -- a new raw layer means
+  // a new typed array, so comparing the array by identity is a free check.
+  function dataRange(){
+    var d;
+    try{ d = JS9.GetImageData(true); }catch(e){ return null; }
+    if( !d || !d.data || !d.data.length ){ return null; }
+    if( d.data === lastData && lastRange ){ return lastRange; }
+    var a = d.data, lo = Infinity, hi = -Infinity, v, i;
+    for(i = 0; i < a.length; i++){
+      v = a[i];
+      if( !isFinite(v) ){ continue; }   // FITS data can carry NaNs
+      if( v < lo ){ lo = v; }
+      if( v > hi ){ hi = v; }
+    }
+    if( !isFinite(lo) || !isFinite(hi) ){ return null; }
+    lastData = d.data;
+    lastRange = { lo: lo, hi: hi };
+    return lastRange;
+  }
+
   function captureRange(){
-    // right after a load JS9 clips to the full data range, so GetScale()
-    // hands us dmin/dmax -- remember them as the slider bounds
-    var s;
-    try{ s = JS9.GetScale(); }catch(e){ return; }
-    if( !s || isNaN(s.scalemin) || isNaN(s.scalemax) ){ return; }
-    range = { lo: s.scalemin, hi: s.scalemax };
-    var pad = (range.hi - range.lo) * 0.25 || 1;
+    var dr = dataRange();
+    if( !dr ){ return; }
+    range = { lo: dr.lo, hi: dr.hi };
+    // Bound the sliders to the data itself: from zero (a floor students
+    // understand) up to the brightest pixel. The floor drops below zero only
+    // when the data genuinely goes negative -- which it does after a dark
+    // subtraction, where removing the bias level leaves noise scattered
+    // either side of zero -- so those images still display correctly.
+    var floor = Math.min(0, range.lo);
     [els.loRange, els.hiRange].forEach(function(r){
-      r.min = range.lo - pad;
-      r.max = range.hi + pad;
-      r.step = Math.max((range.hi - range.lo) / 1000, 1e-6);
+      r.min = floor;
+      r.max = range.hi;
+      r.step = Math.max((range.hi - floor) / 1000, 1e-6);
     });
   }
 
@@ -499,12 +527,12 @@ JS9.globalOpts.menubarStyle = "classic";
     try{ d = JS9.GetImageData(); }catch(e){ d = null; }
     if( d && d.id ){ els.infoImage.textContent = d.id; }
 
+    // keep the slider bounds matched to the current data (cheap: this is a
+    // no-op unless the pixels themselves changed, e.g. after ImageMath)
+    captureRange();
+
     try{ s = JS9.GetScale(); }catch(e){ s = null; }
     if( s && !isNaN(s.scalemin) && !isNaN(s.scalemax) ){
-      if( !range || parseFloat(els.loRange.min) > s.scalemin ||
-                    parseFloat(els.loRange.max) < s.scalemax ){
-        captureRange();
-      }
       if( document.activeElement !== els.loNum ){
         els.loNum.value = fmt(s.scalemin, 0);
         els.loRange.value = s.scalemin;
