@@ -63,6 +63,17 @@ utilizing the <b>WCS->reproject</b> menu option, which uses the WCS of one
 image to reproject the other into a new raw data layer.
 
 <p>
+If the images have no WCS, or a quick eyeball alignment is all you need
+(for example, to line up red/green/blue layers of an RGB composite that
+are slightly offset from each other), each image in the stack has its own
+<b>align: x / y</b> control. Enter a whole-pixel offset in the <b>x</b>
+and <b>y</b> fields to shift that image's data left/right and up/down;
+the field always shows the total offset from the image's original
+registration, so you can keep nudging it in either direction until the
+layers line up. Click <b>reset</b> to return that image to its original
+alignment.
+
+<p>
 Once two or more images are aligned, you can change the colormap,
 contrast/bias and scaling of each of them separately and then combine
 them into a single display. This is done by clicking the <b>blend

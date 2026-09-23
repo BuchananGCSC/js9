@@ -1170,6 +1170,26 @@ div.JS9BlendHeader {
     float: right;
 }
 
+.blendShiftRow {
+    display: block;
+    clear: both;
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px dotted #bbb;
+    font-size: 0.9em;
+}
+
+.blendShiftRow input.JS9Numeric {
+    width: 48px;
+    margin: 0 6px 0 3px;
+}
+
+.blendShiftReset {
+    margin-left: 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
 #blendNoFile {
     margin-left: 15px;
 }
