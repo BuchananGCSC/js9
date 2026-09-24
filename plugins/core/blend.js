@@ -11,14 +11,18 @@ JS9.Blend = {};
 JS9.Blend.CLASS = "JS9";      // class of plugins (1st part of div class)
 JS9.Blend.NAME = "Blend";     // name of this plugin (2nd part of div class)
 JS9.Blend.WIDTH =  550;	  // width of light window
-JS9.Blend.HEIGHT = 270;	  // height of light window
+JS9.Blend.HEIGHT = 320;	  // height of light window
 JS9.Blend.BASE = JS9.Blend.CLASS + JS9.Blend.NAME;  // CSS base class name
 
 JS9.Blend.blendModeHTML='When <b>Image Blending</b> is turned on, the images you select below will be combined using your chosen blend mode and optional opacity. See <a href="https://www.w3.org/TR/compositing-1/" target="blank">W3C Compositing and Blending</a> for info about compositing and blending.<p> <input type="checkbox" class="blendModeCheck" id="active" name="imageBlending" value="active" onclick="javascript:JS9.Blend.xblendmode(\'%s\', this)"><b>Image Blending</b>';
 
-JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span>";
+JS9.Blend.imageHTML="<span style='float: left'>$active &nbsp;&nbsp; $blend &nbsp;&nbsp; $opacity</span>&nbsp;&nbsp; <span id='blendFile'>$imfile</span><br>$shift";
 
 JS9.Blend.activeHTML='<input class="blendActiveCheck" type="checkbox" id="active" name="active" value="active" onclick="javascript:JS9.Blend.xactive(\'%s\', \'%s\', this)">blend using:';
+
+// manual per-layer alignment: nudges the raw data of this image by an
+// integer pixel offset, so mis-registered RGB layers can be lined up by eye
+JS9.Blend.shiftHTML='<span class="blendShiftRow"><b>align:</b> x <input type="number" class="blendShiftX JS9Numeric" value="0" step="1" onchange="javascript:JS9.Blend.xshift(\'%s\', \'%s\', \'x\', this)"> y <input type="number" class="blendShiftY JS9Numeric" value="0" step="1" onchange="javascript:JS9.Blend.xshift(\'%s\', \'%s\', \'y\', this)"> <button type="button" class="blendShiftReset" title="reset this layer\'s alignment to 0,0" onclick="javascript:JS9.Blend.xshiftreset(\'%s\', \'%s\', this)">reset</button></span>';
 
 JS9.Blend.blendHTML='<select class="blendModeSelect JS9Select" onchange="JS9.Blend.xblend(\'%s\', \'%s\', this)"><option selected disabled>blend mode</option><option value="normal">normal</option><option value="screen">screen</option><option value="multiply">multiply</option><option value="overlay">overlay</option><option value="darken">darken</option><option value="lighten">lighten</option><option value="color-dodge">color-dodge</option><option value="color-burn">color-burn</option><option value="hard-light">hard-light</option><option value="soft-light">soft-light</option><option value="difference">difference</option><option value="exclusion">exclusion</option><option value="hue">hue</option><option value="saturation">saturation</option><option value="color">color</option> <option value="luminosity">luminosity</option><option selected disabled>composite mode</option><option value="source-atop">source-atop</option><option value="source-in">source-in</option><option value="source-out">source-out</option><option value="source-over">source-over</option><option value="destination-atop">destination-atop</option><option value="destination-in">destination-in</option><option value="destination-out">destination-out</option><option value="destination-over">destination-over</option></select>';
 
@@ -58,6 +62,56 @@ JS9.Blend.xblend = function(did, id, target){
 	    }
 	}
     }
+};
+
+// change manual alignment offset (x or y) for one layer
+// keeps a running {x, y} pixel offset on the image itself and asks JS9 to
+// shift the raw data by the delta, so the field always shows the total
+// offset from the layer's original registration
+JS9.Blend.xshift = function(did, id, axis, target){
+    let v, delta;
+    const im = JS9.lookupImage(id, did);
+    if( !im ){
+	return;
+    }
+    v = parseFloat(target.value);
+    if( isNaN(v) ){
+	v = 0;
+    }
+    // round to whole pixels: shiftData operates on integer offsets
+    v = Math.round(v);
+    target.value = v;
+    im.blendShift = im.blendShift || {x: 0, y: 0};
+    if( axis === "y" ){
+	delta = v - im.blendShift.y;
+	im.blendShift.y = v;
+	if( delta ){
+	    im.shiftData(0, delta);
+	}
+    } else {
+	delta = v - im.blendShift.x;
+	im.blendShift.x = v;
+	if( delta ){
+	    im.shiftData(delta, 0);
+	}
+    }
+};
+
+// reset one layer's manual alignment back to its original registration
+JS9.Blend.xshiftreset = function(did, id, target){
+    let row;
+    const im = JS9.lookupImage(id, did);
+    if( !im ){
+	return;
+    }
+    im.blendShift = im.blendShift || {x: 0, y: 0};
+    if( im.blendShift.x || im.blendShift.y ){
+	im.shiftData(-im.blendShift.x, -im.blendShift.y);
+    }
+    im.blendShift = {x: 0, y: 0};
+    row = $(target).closest(".blendShiftRow");
+    row.find(".blendShiftX").val(0);
+    row.find(".blendShiftY").val(0);
 };
 
 // change opacity
@@ -138,6 +192,13 @@ JS9.Blend.imageBlend = function(im, dochange){
 	    }
 	}
     }
+    // sync the manual alignment fields (not part of the blendImage state,
+    // but preserved on the image object across dynamic-select and re-init)
+    if( im.blendShift ){
+	el = el || this.divjq.find(`#${id}`);
+	el.find(".blendShiftX").val(im.blendShift.x);
+	el.find(".blendShiftY").val(im.blendShift.y);
+    }
 };
 
 // change the active image
@@ -178,6 +239,9 @@ JS9.Blend.addImage = function(im){
 					       dispid,  imid)});
     opts.push({name: "blend", value: sprintf(JS9.Blend.blendHTML,
 					     dispid,  imid)});
+    opts.push({name: "shift", value: sprintf(JS9.Blend.shiftHTML,
+					     dispid, imid, dispid, imid,
+					     dispid, imid)});
     opts.push({name: "imfile", value: sprintf(JS9.Blend.imfileHTML,
 					      imid)});
     // remove initial message
